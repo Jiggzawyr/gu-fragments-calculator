@@ -12,7 +12,7 @@ export default function Footer() {
                     Email:  <a href = "mailto:martinstojanovic96@gmail.com?subject=GU Fragments Calculator">martinstojanovic96@gmail.com</a>
                 </li>
                 <li>
-                    Instagram:  <a href="https://www.instagram.com/martin.the.mass/" target="_blank">martin.the.mass</a>
+                    Instagram:  <a href="https://www.instagram.com/martin.the.mass/" target="_blank" rel="noopener noreferrer">martin.the.mass</a>
                 </li>
             </ul>
         </div>
