@@ -53,9 +53,7 @@ export default function Main() {
         if(data[i]["diamond"] + data[i]["gold"] + data[i]["shadow"] + data[i]["meteorite"] > 30){
           newMessage = "Sum of diamond, gold, shadow and meteorite cards for one game should be less or equal 30!";
         } 
-
-        if(data[i]["diamond"] + data[i]["gold"] + data[i]["shadow"] + data[i]["meteorite"] === 30){
-
+        else {
           if(data[i]["diamond"] === 30) minQualityBoost = 1;
           else if(data[i]["diamond"] + data[i]["gold"] === 30) minQualityBoost = 0.25;
           else if(data[i]["diamond"] + data[i]["gold"] + data[i]["shadow"] === 30) minQualityBoost = 0.2;
