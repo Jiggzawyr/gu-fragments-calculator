@@ -1,38 +1,104 @@
-.App {
-  text-align: center;
+body {
+    font-family: Helvetica, sans-serif;
+    background-color: #222222;
+    color: #89CFF0;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.title {
+    text-align: center;
+    border-bottom: 5px solid #89CFF0;
+    padding: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.fragments-table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 60%;
+    font-size: 1.2rem;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.fragments-table td, .fragments-table th {
+    border: 1px solid #ddd;
 }
 
-.App-link {
-  color: #61dafb;
+.fragments-table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: center;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.fragments-table input[type='checkbox'] {
+    accent-color: white;
+}
+
+.fragments-table input, .fragments-table select {
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    border: none;
+    font-size: 1.2rem;
+    background-color: #222222;
+    color: #89CFF0;
+}
+
+.small-column {
+    width: 5%;
+}
+
+.medium-column {
+    width: 12%;
+}
+
+.align-right {
+    text-align: right;
+}
+
+.last-column {
+    width: 15%;
+}
+
+.total-section {
+    margin: auto;
+    width: 60%;
+    text-align: right;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.message {
+    display:flex;
+    width: 60%;
+    height:100px;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    text-align: center;
+    color: #ffcc00;
+}
+
+@media only screen and (max-width: 1200px) {
+    .resize-width {
+        width: 70%;
+    }
+}
+
+@media only screen and (max-width: 1000px) {
+    .resize-width {
+        width: 80%;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .resize-width {
+        width: 90%;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .resize-width {
+        width: 100%;
+    }
 }
