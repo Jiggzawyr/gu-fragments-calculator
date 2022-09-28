@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from 'react';
 import './main.css';
 import { ranks, startData } from './data.js';
+import logo from "../../assets/images/godsUnchainedLogo.svg";
 
 function roundToFourDecimalPlaces(num) {
   return Math.round((num + Number.EPSILON) * 10000) / 10000
@@ -9,7 +10,11 @@ function roundToFourDecimalPlaces(num) {
 
 export default function Main() {
 
-  const [data, setData] = useState(startData);
+  const [data, setData] = useState(() => {
+    const d = localStorage.getItem("data");
+    if(d === null) return startData
+    else return JSON.parse(d);
+  });
   const [fragments, setFragments] = React.useState(Array(data.length).fill(0));
   const [totalFragments, setTotalFragments] = React.useState(0);
   const [totalDailyGods, setTotalDailyGods] = React.useState(14000);
@@ -32,6 +37,9 @@ export default function Main() {
   }
 
   React.useEffect( () => {
+
+    localStorage.setItem("data", JSON.stringify(data));
+
     let newFragments = []
     let lastWon = 0;
     let newTotalFragments = 0;
@@ -97,6 +105,9 @@ export default function Main() {
   return (
     <div className="main">
       <h1 className="title">Gods Unchained Fragments Calculator</h1>
+      <div className="logo-container">
+          <img className="logo" src={logo} alt="Gods Unchained Logo" />
+      </div>
       <div className="table-container">
         <table className="fragments-table resize-width">
           <thead>

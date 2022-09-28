@@ -4,14 +4,23 @@ body {
     color: #89CFF0;
 }
 
-.main {
-    padding-bottom: 120px;
-}
-
 .title {
     text-align: center;
     border-bottom: 5px solid #89CFF0;
     padding: 20px;
+}
+
+.logo-container {
+    display: flex;
+    margin: auto;
+    justify-content: center;
+    max-width: 170px;
+    margin: -15px auto -25px auto;
+}
+
+.logo {
+    width: 100%;
+    height: auto;
 }
 
 .fragments-table {
@@ -38,7 +47,6 @@ body {
 .fragments-table input, .fragments-table select {
     margin:0;
     padding:0;
-    height:100%;
     width:100%;
     border: none;
     font-size: 1.2rem;
@@ -75,7 +83,7 @@ body {
 .message {
     display:flex;
     width: 60%;
-    height:100px;
+    height: 20px;
     justify-content: center;
     align-items: center;
     margin: auto;
