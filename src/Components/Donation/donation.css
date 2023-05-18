@@ -5,9 +5,14 @@
     bottom: 0;
     width: 100%;
     height: 170px;
-    font-size: large;
 }
 
 .address {
     color: white;
+}
+
+@media only screen and (max-width: 800px) {
+    .donation {
+        flex-direction: column;
+    }   
 }
