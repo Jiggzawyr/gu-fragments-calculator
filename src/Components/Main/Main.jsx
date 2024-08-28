@@ -1,112 +1,167 @@
 import React from "react";
-import { useState } from 'react';
-import './main.css';
-import { ranks, startData } from './data.js';
+import { useState } from "react";
+import "./main.css";
+import {
+  startData,
+  CardQuality,
+  ranks,
+  cardQualityValue,
+  winStreakModifierAmount,
+  fullDiamondDeckValue,
+  totalCommunityFragmentsDefault,
+  minimumQualityBoostAmount,
+} from "./data.js";
 import logo from "../../assets/images/godsUnchainedLogo.svg";
 
 function roundToFourDecimalPlaces(num) {
-  return Math.round((num + Number.EPSILON) * 10000) / 10000
+  return Math.round((num + Number.EPSILON) * 10000) / 10000;
+}
+
+function deckSize(data) {
+  return (
+    parseInt(data[CardQuality.Diamond]) +
+    parseInt(data[CardQuality.Gold]) +
+    parseInt(data[CardQuality.Shadow]) +
+    parseInt(data[CardQuality.Meteorite])
+  );
+}
+
+function calculateNormalisedDeckValue(data) {
+  const deckValue =
+    data[CardQuality.Diamond] * cardQualityValue[CardQuality.Diamond] +
+    data[CardQuality.Gold] * cardQualityValue[CardQuality.Gold] +
+    data[CardQuality.Shadow] * cardQualityValue[CardQuality.Shadow] +
+    data[CardQuality.Meteorite] * cardQualityValue[CardQuality.Meteorite];
+  return deckValue / fullDiamondDeckValue;
+}
+
+function calculateMinimumQualityBoost(data) {
+  if (parseInt(data[CardQuality.Diamond]) === 30)
+    return minimumQualityBoostAmount[CardQuality.Diamond];
+  else if (
+    parseInt(data[CardQuality.Diamond]) + parseInt(data[CardQuality.Gold]) ===
+    30
+  )
+    return minimumQualityBoostAmount[CardQuality.Gold];
+  else if (
+    parseInt(data[CardQuality.Diamond]) +
+      parseInt(data[CardQuality.Gold]) +
+      parseInt(data[CardQuality.Shadow]) ===
+    30
+  )
+    return minimumQualityBoostAmount[CardQuality.Shadow];
+  else if (
+    parseInt(data[CardQuality.Diamond]) +
+      parseInt(data[CardQuality.Gold]) +
+      parseInt(data[CardQuality.Shadow]) +
+      parseInt(data[CardQuality.Meteorite]) ===
+    30
+  )
+    return minimumQualityBoostAmount[CardQuality.Meteorite];
+  else return 0;
 }
 
 export default function Main() {
-
   const [data, setData] = useState(() => {
     const d = localStorage.getItem("data");
-    if(d === null) return startData
+    console.log(d);
+    if (d === null) return startData;
     else return JSON.parse(d);
   });
+
   const [fragments, setFragments] = React.useState(Array(data.length).fill(0));
   const [totalFragments, setTotalFragments] = React.useState(0);
   const [totalDailyGods, setTotalDailyGods] = React.useState(14000);
-  const [totalCommunityFragments, setTotalCommunityFragments] = React.useState(3210000);
+  const [totalCommunityFragments, setTotalCommunityFragments] = React.useState(
+    totalCommunityFragmentsDefault
+  );
   const [totalDailyRewards, setTotalDailyRewards] = React.useState(0);
 
   const [message, setMessage] = React.useState("");
 
   const handleOnChange = (index, key, value) => {
-    if(["meteorite","shadow","gold","diamond"].includes(key)){
-      if(value ===  '') value = 0;
-      value = parseInt(value); 
+    if (
+      [
+        CardQuality.Meteorite,
+        CardQuality.Shadow,
+        CardQuality.Gold,
+        CardQuality.Diamond,
+      ].includes(key)
+    ) {
+      if (value === "") value = 0;
+      value = parseInt(value);
     }
-    setData( (prevData) => {
+    setData((prevData) => {
       let newData = [...prevData];
-      // console.log(newData);
       newData[index][key] = value;
       return newData;
-    })
-  }
+    });
+  };
 
-  React.useEffect( () => {
-
+  React.useEffect(() => {
     localStorage.setItem("data", JSON.stringify(data));
 
-    let newFragments = []
+    let newFragments = [];
     let lastWon = 0;
     let newTotalFragments = 0;
     let totalWins = 0;
 
     let newMessage = "";
 
-    for(let i = 0; i < data.length; i++){
+    for (let i = 0; i < data.length; i++) {
+      newFragments[i] = 0.0;
+      if (data[i]["win"] === true) {
+        if (deckSize(data[i]) > 30) {
+          newMessage =
+            "Sum of diamond, gold, shadow and meteorite cards for one game should be less or equal 30!";
+        } else {
+          const minimumQualityBoost = calculateMinimumQualityBoost(data[i]);
+          const normalisedDeckValue = calculateNormalisedDeckValue(data[i]);
+          const deckModifier =
+            normalisedDeckValue * (1 - minimumQualityBoost) +
+            minimumQualityBoost;
+          const firstThreeWinsMod = totalWins < 3 ? 2 : 1;
+          const rankMod = ranks.find(
+            (rank) => rank.name === data[i]["rank"]
+          ).mod;
+          const winstreakModifier = lastWon ? winStreakModifierAmount : 0;
 
-      newFragments[i] = 0.00;
+          newFragments[i] =
+            rankMod > 0
+              ? 100 *
+                (rankMod + winstreakModifier + deckModifier) *
+                firstThreeWinsMod
+              : 0;
 
-      if(data[i]["win"] === true){
-
-        let rankMod = ranks.find((rank) => rank.name === data[i]["rank"]).mod;
-        let winstreakMod = lastWon ? 0.09 : 0;
-        let cardValueMod = (data[i]["diamond"] * 125 + data[i]["gold"] * 25 + data[i]["shadow"] * 5 + data[i]["meteorite"]) / 3750;
-        let minQualityBoost = 0;
-
-        if(data[i]["diamond"] + data[i]["gold"] + data[i]["shadow"] + data[i]["meteorite"] > 30){
-          newMessage = "Sum of diamond, gold, shadow and meteorite cards for one game should be less or equal 30!";
-        } 
-        else {
-          if(data[i]["diamond"] === 30) minQualityBoost = 1;
-          else if(data[i]["diamond"] + data[i]["gold"] === 30) minQualityBoost = 0.25;
-          else if(data[i]["diamond"] + data[i]["gold"] + data[i]["shadow"] === 30) minQualityBoost = 0.2;
-          else if(data[i]["diamond"] + data[i]["gold"] + data[i]["shadow"] + data[i]["meteorite"] === 30) minQualityBoost = 0.15;
-
-          // console.log("cardValueMod: " + cardValueMod);
-          // console.log("minQualityBoost: " + minQualityBoost);
-          let deckTotalMod = cardValueMod*(1 - minQualityBoost) + minQualityBoost;
-          // console.log("rankMod: " + rankMod);
-          // console.log("winstreakMod: " + winstreakMod);
-          // console.log("deckTotalMod: " + deckTotalMod);
-          let firstThreeWinsMod = totalWins < 3 ? 2 : 1;
-          // console.log("firstThreeWinsMod: " + firstThreeWinsMod);
-          newFragments[i] = 100 * (rankMod + winstreakMod + deckTotalMod) * firstThreeWinsMod;
-          newFragments[i] = roundToFourDecimalPlaces(newFragments[i])
-
+          newFragments[i] = roundToFourDecimalPlaces(newFragments[i]);
         }
         lastWon = true;
         totalWins++;
-
       } else {
-
         lastWon = false;
-
       }
+
       newTotalFragments += newFragments[i];
-    } 
-    // console.log("newFragments: " + newFragments);
+    }
+
     setMessage(newMessage);
     setFragments(newFragments);
     newTotalFragments = roundToFourDecimalPlaces(newTotalFragments);
     setTotalFragments(newTotalFragments);
-  }, [data])
+  }, [data]);
 
-  React.useEffect( () => {
-    let newTotalDailyRewards = totalFragments * totalDailyGods / totalCommunityFragments
+  React.useEffect(() => {
+    let newTotalDailyRewards =
+      (totalFragments * totalDailyGods) / totalCommunityFragments;
     newTotalDailyRewards = roundToFourDecimalPlaces(newTotalDailyRewards);
     setTotalDailyRewards(newTotalDailyRewards);
-  }, [totalFragments, totalDailyGods, totalCommunityFragments])
+  }, [totalFragments, totalDailyGods, totalCommunityFragments]);
 
   return (
     <div className="main">
       <h1 className="title">Gods Unchained Fragments Calculator</h1>
       <div className="logo-container">
-          <img className="logo" src={logo} alt="Gods Unchained Logo" />
+        <img className="logo" src={logo} alt="Gods Unchained Logo" />
       </div>
       <div className="table-container">
         <table className="fragments-table resize-width">
@@ -123,104 +178,153 @@ export default function Main() {
             </tr>
           </thead>
           <tbody>
-            {data.map( (elem, index) => {
+            {data.map((elem, index) => {
               return (
-                <tr key={"tr-"+index}>
+                <tr key={"tr-" + index}>
                   <td className="medium-column">{elem.game}</td>
                   <td className="small-column">
-                    <input 
-                      type="checkbox" 
-                      checked = {elem.win} 
-                      onChange={ e => handleOnChange(index, "win", e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={elem.win}
+                      onChange={(e) =>
+                        handleOnChange(index, "win", e.target.checked)
+                      }
+                    />
                   </td>
                   <td>
-                    <select onChange={ e => handleOnChange(index, "rank", e.target.value)}>
-                      {
-                        ranks.map( (elem, index) => {
-                          return <option key={"option-"+index} value={elem.name}>{elem.name}</option>
-                        })
+                    <select
+                      value={elem.rank}
+                      onChange={(e) =>
+                        handleOnChange(index, "rank", e.target.value)
                       }
+                    >
+                      {ranks.map((elem, index) => {
+                        return (
+                          <option key={"option-" + index} value={elem.name}>
+                            {elem.name}
+                          </option>
+                        );
+                      })}
                     </select>
                   </td>
                   <td className="medium-column">
-                    <input 
-                      type="number" min="0" max="30" step="1" 
-                      defaultValue={elem.meteorite} 
-                      onChange={ e => handleOnChange(index, "meteorite", e.target.value)} />
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      step="1"
+                      defaultValue={elem.meteorite}
+                      onChange={(e) =>
+                        handleOnChange(index, "meteorite", e.target.value)
+                      }
+                    />
                   </td>
                   <td className="medium-column">
-                    <input 
-                      type="number" min="0" max="30" step="1" 
-                      defaultValue={elem.shadow} 
-                      onChange={ e => handleOnChange(index, "shadow", e.target.value)} />
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      step="1"
+                      defaultValue={elem.shadow}
+                      onChange={(e) =>
+                        handleOnChange(index, "shadow", e.target.value)
+                      }
+                    />
                   </td>
                   <td className="medium-column">
-                    <input 
-                      type="number" min="0" max="30" step="1" 
-                      defaultValue={elem.gold} 
-                      onChange={ e => handleOnChange(index, "gold", e.target.value)} />
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      step="1"
+                      defaultValue={elem.gold}
+                      onChange={(e) =>
+                        handleOnChange(index, "gold", e.target.value)
+                      }
+                    />
                   </td>
                   <td className="medium-column">
-                    <input 
-                      type="number" min="0" max="30" step="1" 
-                      defaultValue={elem.diamond} 
-                      onChange={ e => handleOnChange(index, "diamond", e.target.value)} />
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      step="1"
+                      defaultValue={elem.diamond}
+                      onChange={(e) =>
+                        handleOnChange(index, "diamond", e.target.value)
+                      }
+                    />
                   </td>
                   <td className="last-column">
-                    <input 
-                      className="align-right" 
-                      type="number" 
-                      disabled 
-                      value={fragments[index]} />
+                    <input
+                      className="align-right"
+                      type="number"
+                      disabled
+                      value={fragments[index]}
+                    />
                   </td>
                 </tr>
-              )
+              );
             })}
           </tbody>
         </table>
         <div className="message resize-width">
-            <p>{message}</p>
+          <p>{message}</p>
         </div>
         <table className="fragments-table resize-width">
           <tbody>
             <tr>
-              <td><div className="align-right bold">Total Fragments: </div></td>
+              <td>
+                <div className="align-right bold">Total Fragments: </div>
+              </td>
               <td className="last-column">
-                <input 
-                  className="align-right" 
-                  type="number" 
-                  disabled 
-                  value={totalFragments} />
+                <input
+                  className="align-right"
+                  type="number"
+                  disabled
+                  value={totalFragments}
+                />
               </td>
             </tr>
             <tr>
-              <td><div className="align-right bold">Total Daily GODS: </div></td>
+              <td>
+                <div className="align-right bold">Total Daily GODS: </div>
+              </td>
               <td className="last-column">
-                <input 
-                  className="align-right" 
-                  type="number" 
-                  onChange={ e => setTotalDailyGods(e.target.value) } 
-                  value={totalDailyGods}/>
+                <input
+                  className="align-right"
+                  type="number"
+                  onChange={(e) => setTotalDailyGods(e.target.value)}
+                  value={totalDailyGods}
+                />
               </td>
             </tr>
             <tr>
-              <td><div className="align-right bold">Total Community Fragments: </div></td>
+              <td>
+                <div className="align-right bold">
+                  Total Community Fragments:{" "}
+                </div>
+              </td>
               <td className="last-column">
-                <input 
-                  className="align-right" 
-                  type="number" 
-                  onChange={e => setTotalCommunityFragments(e.target.value)} 
-                  value={totalCommunityFragments} />
+                <input
+                  className="align-right"
+                  type="number"
+                  onChange={(e) => setTotalCommunityFragments(e.target.value)}
+                  value={totalCommunityFragments}
+                />
               </td>
             </tr>
             <tr>
-              <td><div className="align-right bold">Your Daily Rewards: </div></td>
+              <td>
+                <div className="align-right bold">Your Daily Rewards: </div>
+              </td>
               <td className="last-column">
-                <input 
-                  className="align-right" 
-                  type="number" 
-                  disabled 
-                  value={totalDailyRewards} />
+                <input
+                  className="align-right"
+                  type="number"
+                  disabled
+                  value={totalDailyRewards}
+                />
               </td>
             </tr>
           </tbody>
