@@ -1,4 +1,4 @@
-export const startData = [
+export const START_DATA = [
   {
     game: 1,
     win: true,
@@ -91,7 +91,7 @@ export const startData = [
   },
 ];
 
-export const totalCommunityFragmentsDefault = 3210000;
+export const TOTAL_COMMUNITY_FRAGMENTS_DEFAULT = 321000;
 
 export const CardQuality = Object.freeze({
   Diamond: "diamond",
@@ -121,8 +121,6 @@ cardQualityValue[CardQuality.Gold] = 25;
 cardQualityValue[CardQuality.Shadow] = 10;
 cardQualityValue[CardQuality.Meteorite] = 1;
 
-export const winStreakModifierAmount = 0.09;
-
 export const fullDiamondDeckValue = 3750;
 
 export const minimumQualityBoostAmount = {};
@@ -130,3 +128,11 @@ minimumQualityBoostAmount[CardQuality.Diamond] = 1;
 minimumQualityBoostAmount[CardQuality.Gold] = 0.25;
 minimumQualityBoostAmount[CardQuality.Shadow] = 0.2;
 minimumQualityBoostAmount[CardQuality.Meteorite] = 0.15;
+
+export const winRateModifiers = [
+  0, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.03, 0.09, 0.09, 0.09,
+];
+
+export const BOOSTER = 2;
+
+export const GAME_MODE_MODIFIER_NORMAL = 1;

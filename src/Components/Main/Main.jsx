@@ -2,14 +2,16 @@ import React from "react";
 import { useState } from "react";
 import "./main.css";
 import {
-  startData,
+  START_DATA,
   CardQuality,
   ranks,
   cardQualityValue,
-  winStreakModifierAmount,
   fullDiamondDeckValue,
-  totalCommunityFragmentsDefault,
+  TOTAL_COMMUNITY_FRAGMENTS_DEFAULT,
   minimumQualityBoostAmount,
+  winRateModifiers,
+  BOOSTER,
+  GAME_MODE_MODIFIER_NORMAL,
 } from "./data.js";
 import logo from "../../assets/images/godsUnchainedLogo.svg";
 
@@ -64,16 +66,18 @@ function calculateMinimumQualityBoost(data) {
 export default function Main() {
   const [data, setData] = useState(() => {
     const d = localStorage.getItem("data");
-    console.log(d);
-    if (d === null) return startData;
+    if (d === null) return START_DATA;
     else return JSON.parse(d);
   });
 
   const [fragments, setFragments] = React.useState(Array(data.length).fill(0));
+  const [gameModeModifier, setGameModeModifier] = React.useState(
+    GAME_MODE_MODIFIER_NORMAL
+  );
   const [totalFragments, setTotalFragments] = React.useState(0);
   const [totalDailyGods, setTotalDailyGods] = React.useState(14000);
   const [totalCommunityFragments, setTotalCommunityFragments] = React.useState(
-    totalCommunityFragmentsDefault
+    TOTAL_COMMUNITY_FRAGMENTS_DEFAULT
   );
   const [totalDailyRewards, setTotalDailyRewards] = React.useState(0);
 
@@ -101,16 +105,15 @@ export default function Main() {
   React.useEffect(() => {
     localStorage.setItem("data", JSON.stringify(data));
 
-    let newFragments = [];
-    let lastWon = 0;
-    let newTotalFragments = 0;
+    const newFragments = [];
     let totalWins = 0;
-
+    let consecutiveWins = 0;
     let newMessage = "";
 
     for (let i = 0; i < data.length; i++) {
       newFragments[i] = 0.0;
       if (data[i]["win"] === true) {
+        consecutiveWins = 1;
         if (deckSize(data[i]) > 30) {
           newMessage =
             "Sum of diamond, gold, shadow and meteorite cards for one game should be less or equal 30!";
@@ -120,35 +123,36 @@ export default function Main() {
           const deckModifier =
             normalisedDeckValue * (1 - minimumQualityBoost) +
             minimumQualityBoost;
-          const firstThreeWinsMod = totalWins < 3 ? 2 : 1;
+          const skillModifier = winRateModifiers[consecutiveWins];
+          const boosterModifier = totalWins < 3 ? BOOSTER : 1;
           const rankMod = ranks.find(
             (rank) => rank.name === data[i]["rank"]
           ).mod;
-          const winstreakModifier = lastWon ? winStreakModifierAmount : 0;
-
           newFragments[i] =
             rankMod > 0
               ? 100 *
-                (rankMod + winstreakModifier + deckModifier) *
-                firstThreeWinsMod
+                deckModifier *
+                (100 * skillModifier) *
+                boosterModifier *
+                rankMod *
+                gameModeModifier
               : 0;
 
           newFragments[i] = roundToFourDecimalPlaces(newFragments[i]);
         }
-        lastWon = true;
         totalWins++;
+        consecutiveWins++;
       } else {
-        lastWon = false;
+        consecutiveWins = 0;
       }
-
-      newTotalFragments += newFragments[i];
     }
 
     setMessage(newMessage);
     setFragments(newFragments);
-    newTotalFragments = roundToFourDecimalPlaces(newTotalFragments);
-    setTotalFragments(newTotalFragments);
-  }, [data]);
+    setTotalFragments(
+      roundToFourDecimalPlaces(newFragments.reduce((acc, value) => acc + value))
+    );
+  }, [data, gameModeModifier]);
 
   React.useEffect(() => {
     let newTotalDailyRewards =
@@ -275,6 +279,19 @@ export default function Main() {
           <tbody>
             <tr>
               <td>
+                <div className="align-right bold">Game Mode Modifier: </div>
+              </td>
+              <td className="last-column">
+                <input
+                  className="align-right"
+                  type="number"
+                  onChange={(e) => setGameModeModifier(e.target.value)}
+                  value={gameModeModifier}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
                 <div className="align-right bold">Total Fragments: </div>
               </td>
               <td className="last-column">
@@ -283,19 +300,6 @@ export default function Main() {
                   type="number"
                   disabled
                   value={totalFragments}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div className="align-right bold">Total Daily GODS: </div>
-              </td>
-              <td className="last-column">
-                <input
-                  className="align-right"
-                  type="number"
-                  onChange={(e) => setTotalDailyGods(e.target.value)}
-                  value={totalDailyGods}
                 />
               </td>
             </tr>
@@ -311,6 +315,19 @@ export default function Main() {
                   type="number"
                   onChange={(e) => setTotalCommunityFragments(e.target.value)}
                   value={totalCommunityFragments}
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div className="align-right bold">Total Daily GODS: </div>
+              </td>
+              <td className="last-column">
+                <input
+                  className="align-right"
+                  type="number"
+                  onChange={(e) => setTotalDailyGods(e.target.value)}
+                  value={totalDailyGods}
                 />
               </td>
             </tr>
